@@ -1,18 +1,19 @@
-use clap::App;
+use clap::Clap;
 use duct::cmd;
 
-fn main() {
-    let matches = App::new("mypipe")
-        .version("1.0")
-        .about("Pipe one command into another")
-        .arg("-i, --in=[COMMAND] 'command'")
-        .arg("-o, --out=[COMMAND] 'command'")
-        .get_matches();
+#[derive(Clap)]
+#[clap(version = "1.0")]
+struct Opts {
+    #[clap(short, long)]
+    r#in: String,
+    #[clap(short, long)]
+    out: String,
+}
 
-    let stdout = cmd!(matches.value_of("in").unwrap())
-        .pipe(cmd!(matches.value_of("out").unwrap()))
-        .read()
-        .unwrap();
+fn main() {
+    let opts: Opts = Opts::parse();
+
+    let stdout = cmd!(opts.r#in).pipe(cmd!(opts.out)).read().unwrap();
 
     println!("{}", stdout);
 }
