@@ -3,7 +3,7 @@
 You have to recode a small pipe-like program, working like this:
 
 ```shell
-$ mypipe --in fortune --out cowsay
+$ cargo run -- --in fortune --out cowsay
 ```
 
 ```
