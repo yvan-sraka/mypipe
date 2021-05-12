@@ -19,8 +19,18 @@ fn main() {
     }
 }
 
-fn pipe_cmd(cmd_in: String, cmd_out: String) -> Result<String, std::io::Error> {
-    return cmd!(cmd_in).pipe(cmd!(cmd_out)).read();
+fn pipe_cmd(cmd_in_raw: String, cmd_out_raw: String) -> Result<String, std::io::Error> {
+    let cmd_in_args = cmd_in_raw.split_whitespace().collect::<Vec<&str>>();
+    let cmd_in_exec = cmd_in_args[0];
+    let cmd_in_args = &cmd_in_args[1..];
+
+    let cmd_out_args = cmd_out_raw.split_whitespace().collect::<Vec<&str>>();
+    let cmd_out_exec = cmd_out_args[0];
+    let cmd_out_args = &cmd_out_args[1..];
+
+    return cmd(cmd_in_exec, cmd_in_args)
+        .pipe(cmd(cmd_out_exec, cmd_out_args))
+        .read();
 }
 
 #[cfg(test)]
@@ -34,7 +44,7 @@ mod tests {
         assert_eq!(res.unwrap(), "      1       1       5".to_string());
     }
 
-    // doesn't work :()
+    #[test]
     fn test_cmd_pipe_args() {
         let res = pipe_cmd("whoami".to_string(), "wc -l".to_string());
         assert!(res.is_ok());
