@@ -12,7 +12,7 @@ fn is_valid_command(command: &str) -> Result<(), String> {
 }
 
 fn main() -> io::Result<()> {
-    let matches = App::new("MasterMind")
+    let matches = App::new("Piper")
         .args(&[
             Arg::new("in")
                 .long("in")
