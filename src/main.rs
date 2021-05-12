@@ -1,7 +1,7 @@
 use clap::{App, Arg};
 use std::{
     io,
-    process::{Command, Stdio},
+    process::{Child, Command, Stdio},
 };
 
 fn is_valid_command(command: &str) -> Result<(), String> {
@@ -9,6 +9,19 @@ fn is_valid_command(command: &str) -> Result<(), String> {
         None => Err(format!("invalid command")),
         _ => Ok(()),
     }
+}
+
+fn spawn<T>(command: &str, stdin: T) -> io::Result<Child>
+where
+    T: Into<Stdio>,
+{
+    let mut args = shlex::split(command.clone()).unwrap();
+
+    Command::new(args.remove(0))
+        .args(args)
+        .stdout(Stdio::piped())
+        .stdin(stdin.into())
+        .spawn()
 }
 
 fn main() -> io::Result<()> {
@@ -33,23 +46,11 @@ fn main() -> io::Result<()> {
         .get_matches();
 
     let in_command = matches.value_of("in").unwrap();
-    let out_commands: Vec<_> = matches.values_of("out").unwrap().collect();
 
-    let mut in_args = shlex::split(in_command).unwrap();
+    let mut command_child = spawn(in_command, Stdio::inherit())?;
 
-    let mut command_child = Command::new(in_args.remove(0))
-        .args(in_args)
-        .stdout(Stdio::piped())
-        .spawn()?;
-
-    for out_command in out_commands {
-        let mut out_args = shlex::split(out_command.clone()).unwrap();
-
-        command_child = Command::new(out_args.remove(0))
-            .args(out_args)
-            .stdout(Stdio::piped())
-            .stdin(command_child.stdout.unwrap())
-            .spawn()?;
+    for out_command in matches.values_of("out").unwrap() {
+        command_child = spawn(out_command, command_child.stdout.unwrap())?;
     }
 
     println!(
