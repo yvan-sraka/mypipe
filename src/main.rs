@@ -13,7 +13,8 @@ struct Opts {
 fn main() {
     let opts: Opts = Opts::parse();
 
-    let stdout = cmd!(opts.r#in).pipe(cmd!(opts.out)).read().unwrap();
-
-    println!("{}", stdout);
+    match cmd!(opts.r#in).pipe(cmd!(opts.out)).read() {
+        Ok(stdout) => println!("{}", stdout),
+        Err(err) => eprintln!("{}", err),
+    }
 }
