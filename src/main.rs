@@ -16,22 +16,21 @@ struct Cli {
 fn main() {
     let args = Cli::from_args();
     let mut first_command = Command::new(&args.input_command[0]);
-    let mut input_command = args.input_command;
-    if input_command.len() > 1 {
-        input_command.remove(0);
-        first_command.args(input_command);
-    }
+    if_str_command_more_1_add_args(args.input_command, &mut first_command);
     let output1 = first_command.stdout(Stdio::piped()).spawn();
 
     let mut second_command = Command::new(&args.output_command[0]);
-    let mut output_command = args.output_command;
-    if output_command.len() > 1 {
-        output_command.remove(0);
-        second_command.args(output_command);
-    }
+    if_str_command_more_1_add_args(args.output_command, &mut second_command);
     let output2 = second_command
         .stdin(Stdio::from(output1.unwrap().stdout.unwrap()))
         .output()
         .ok();
     println!("{}", str::from_utf8(&output2.unwrap().stdout).unwrap());
+}
+
+fn if_str_command_more_1_add_args(mut str_command: Vec<String>, command: &mut Command) {
+    if str_command.len() > 1 {
+        str_command.remove(0);
+        command.args(str_command);
+    }
 }
