@@ -18,29 +18,42 @@ fn main() -> io::Result<()> {
                 .short('o')
                 .about("Output")
                 .required(true)
+                .multiple_occurrences(true)
                 .takes_value(true),
         ])
         .get_matches();
 
     let in_command = matches.value_of("in").unwrap();
-    let out_command = matches.value_of("out").unwrap();
+    let out_commands: Vec<_> = matches.values_of("out").unwrap().collect();
 
     let mut in_args = shlex::split(in_command)
         .unwrap_or_else(|| panic!("`--in` argument should be a valid command"));
-    let mut out_args = shlex::split(out_command)
-        .unwrap_or_else(|| panic!("`--out` argument should be a valid command"));
 
-    let in_command_child = Command::new(in_args.remove(0))
+    for i in 0..out_commands.len() {
+        if shlex::split(out_commands[0].clone()).is_none() {
+            panic!("`--out[{}]` argument should be a valid command", i)
+        }
+    }
+
+    let mut command_child = Command::new(in_args.remove(0))
         .args(in_args)
         .stdout(Stdio::piped())
         .spawn()?;
 
-    let out_command_output = Command::new(out_args.remove(0))
-        .args(out_args)
-        .stdin(in_command_child.stdout.unwrap())
-        .output()?;
+    for out_command in out_commands {
+        let mut out_args = shlex::split(out_command.clone()).unwrap();
 
-    println!("{}", String::from_utf8_lossy(&out_command_output.stdout));
+        command_child = Command::new(out_args.remove(0))
+            .args(out_args)
+            .stdout(Stdio::piped())
+            .stdin(command_child.stdout.unwrap())
+            .spawn()?;
+    }
+
+    println!(
+        "{}",
+        String::from_utf8_lossy(&command_child.wait_with_output()?.stdout)
+    );
 
     Ok(())
 }
