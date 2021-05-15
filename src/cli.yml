@@ -1,0 +1,16 @@
+name: mypipe
+version: "1.0"
+author: Abdelillah G. <aghomari@myges.fr>
+about: Create a pipe
+args:
+  - INPUT:
+      about: Precise the "in" command
+      long: in
+      takes_value: true
+      required: true
+  - OUTPUT:
+      about: Precise the "out" command
+      long: out
+      takes_value: true
+      required: true
+
